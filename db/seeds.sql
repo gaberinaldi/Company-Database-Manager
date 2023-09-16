@@ -1,5 +1,5 @@
-USE department;
-INSERT INTO department (name)
+USE company_db;
+INSERT INTO department (department_name)
 VALUES
 ("Sales"),
 ("Engineering"),
