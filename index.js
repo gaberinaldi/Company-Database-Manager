@@ -199,3 +199,113 @@ const viewEmployees = () => {
             }); 
         });
 };
+
+const addEmployee = () => {
+    return inquirer.prompt([
+        {
+            type: "input",
+            name: "firstName",
+            message: "Please enter employees first name",
+            validate: firstNameInput => {
+                if (firstNameInput) {
+                    return true;
+                } else {
+                    console.log("Please enter first name");
+                    return false;
+                };
+            }
+        },
+        {
+            type: "input",
+            name: "lastName",
+            message: "Please enter employees last name",
+            validate: lastNameInput => {
+                if (lastNameInput) {
+                    return true;
+                } else {
+                    console.log("Please enter last name");
+                    return false;
+                };
+            }
+        },
+        {
+            type: "input",
+            name: "role",
+            message: "Please enter the role id",
+            validate: roleInput => {
+                if (isNaN(roleInput)) {
+                    console.log("Please enter an ID");
+                    return false;
+                } else {
+                    return true;
+                };
+            }
+        }
+
+    ])
+    .then (answer => {
+        const sql = 
+        `INSERT INTO employees (first_name, last_name, role_id) VALUES (?, ?, ?)`;
+        const params = [answer.firstName, answer.lastName, answer.role];
+        db.query(sql, params, (err) => {
+            if (err) {
+                throw err;
+            }
+            console.log("New employee added");
+            return viewEmployees();
+        }); 
+    });
+};
+
+const getEmployeeChoices = () => {
+    return new Promise((resolve, reject) => {
+      const sql = "SELECT id, role_id, CONCAT(first_name, ' ', last_name) AS name FROM employees";
+      db.query(sql, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          const choices = rows.map((row) => ({ value: row.id, name: row.name }));
+          resolve(choices);
+        }
+      });
+    });
+};
+
+const updateEmployee = async () => {
+    const choices = await getEmployeeChoices();
+  
+    return inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "employeeId",
+          message: "Select the employee to update:",
+          choices: choices,
+        },
+        {
+          type: "input",
+          name: "roleId",
+          message: "Please enter the new role ID",
+          validate: (roleIdInput) => {
+            if (roleIdInput) {
+              return true;
+            } else {
+              console.log("Please enter the role ID");
+              return false;
+            }
+          },
+        },
+      ])
+      .then((answer) => {
+        const sql = `UPDATE employees SET role_id = ? WHERE id = ?`;
+        const params = [answer.roleId, answer.employeeId];
+        db.query(sql, params, (err) => {
+          if (err) {
+            throw err;
+          }
+          console.log("Employee info updated");
+          return viewEmployees();
+        });
+    });
+};
+
