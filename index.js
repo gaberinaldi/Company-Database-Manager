@@ -142,9 +142,20 @@ const viewEmployees = () => {
         });
     });
 };
-
     const addRole = () => {
-        return inquirer.prompt([
+        const sql = `SELECT * FROM department`;
+        db.query(sql, (err, rows) => {
+            if (err) {
+                throw err;
+            }
+            var listOfDepartments = rows.map((department) => {
+                return {
+                    name: department.department_name,
+                    value: department.id
+                }
+            })
+        //    console.log(listOfDepartments)
+         inquirer.prompt([
             {
                 type: "input",
                 name: "newRole",
@@ -172,17 +183,11 @@ const viewEmployees = () => {
                 }
             },
             {
-                type: "input",
+                type: "list",
                 name: "department",
-                message: "Please enter the department id",
-                validate: departmentInput => {
-                    if (isNaN(departmentInput)) {
-                        console.log("Please enter an ID");
-                        return false;
-                    } else {
-                        return true;
-                    };
-                }
+                message: "Please choose the department ID",
+                choices: listOfDepartments
+                
             }
 
         ])
@@ -198,6 +203,7 @@ const viewEmployees = () => {
                 return viewRoles();
             }); 
         });
+    });
 };
 
 const addEmployee = () => {
@@ -231,7 +237,7 @@ const addEmployee = () => {
         {
             type: "input",
             name: "role",
-            message: "Please enter the role id",
+            message: "Please enter the role ID",
             validate: roleInput => {
                 if (isNaN(roleInput)) {
                     console.log("Please enter an ID");
@@ -240,13 +246,26 @@ const addEmployee = () => {
                     return true;
                 };
             }
+        },
+        {
+            type: "input",
+            name: "manager",
+            message: "Please enter managers ID",
+            validate: managerInput => {
+                if (managerInput) {
+                    return true;
+                } else {
+                    console.log("Please enter managers ID");
+                    return false;
+                };
+            }
         }
 
     ])
     .then (answer => {
         const sql = 
-        `INSERT INTO employees (first_name, last_name, role_id) VALUES (?, ?, ?)`;
-        const params = [answer.firstName, answer.lastName, answer.role];
+        `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+        const params = [answer.firstName, answer.lastName, answer.role, answer.manager];
         db.query(sql, params, (err) => {
             if (err) {
                 throw err;
